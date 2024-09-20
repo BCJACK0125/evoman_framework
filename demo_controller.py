@@ -15,7 +15,7 @@ def sigmoid_activation(x):
 # implements controller structure for player
 class player_controller(Controller):
 	def __init__(self, _n_hidden):
-		self.n_hidden = [_n_hidden]
+		self.n_hidden = [_n_hidden]    # creating a list with a single element, _n_hidden
 
 	def set(self,controller, n_inputs):
 		# Number of hidden neurons
