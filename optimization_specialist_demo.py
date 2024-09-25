@@ -34,7 +34,7 @@ n_hidden_neurons = 10
 
 # initializes simulation in individual evolution mode, for single static enemy.
 env = Environment(experiment_name=experiment_name,
-                  enemies=[8],
+                  enemies=[1],
                   playermode="ai",
                   player_controller=player_controller(n_hidden_neurons),
                   enemymode="static",
@@ -62,9 +62,9 @@ n_vars = (env.get_num_sensors()+1)*n_hidden_neurons + (n_hidden_neurons+1)*5
 
 dom_u = 1
 dom_l = -1
-npop = 100
-gens = 30
-mutation = 0.2
+npop = 300
+gens = 60
+mutation = 0.15
 last_best = 0
 
 
@@ -114,7 +114,7 @@ def limits(x):
 
 
 # crossover
-def crossover(pop):
+def crossover(pop, gen):
 
     total_offspring = np.zeros((0,n_vars))
 
@@ -123,22 +123,42 @@ def crossover(pop):
         p1 = tournament(pop)
         p2 = tournament(pop)
 
-        n_offspring =   np.random.randint(1,3+1, 1)[0]
+        n_offspring =   np.random.randint(1,pop.shape[0]*0.05, 1)[0]
         offspring =  np.zeros( (n_offspring, n_vars) )
 
         for f in range(0,n_offspring):
 
-            cross_prop = np.random.uniform(0,1)
-            offspring[f] = p1*cross_prop+p2*(1-cross_prop)
+            # pick a point to crossover
+            if np.random.uniform(0,1) <= 0.5:
+                cross_point = np.random.randint(0,n_vars, 1)[0]
+                offspring[f] = np.concatenate((p1[0:cross_point], p2[cross_point:]))
+
+            
+            if np.random.uniform(0,1) <= 0.2:
+                cross_prop = np.random.uniform(0.35,0.65)
+                offspring[f] = p1*cross_prop+p2*(1-cross_prop)
+            else:
+                if np.random.uniform(0,1) <= 0.5:
+                    offspring[f] = p2
+                else:
+                    offspring[f] = p1
+                
 
             # mutation
             for i in range(0,len(offspring[f])):
                 if np.random.uniform(0 ,1)<=mutation:
-                    offspring[f][i] =   offspring[f][i]+np.random.normal(0, 1)
+                    offspring[f][i] =   offspring[f][i]+np.random.normal(0, 1-pow(gen,2)/pow(gens,2), 1)[0]
 
             offspring[f] = np.array(list(map(lambda y: limits(y), offspring[f])))
 
             total_offspring = np.vstack((total_offspring, offspring[f]))
+
+    # removes n_offspring worst solutions
+    fit_offspring = evaluate(total_offspring)
+    order = np.argsort(fit_offspring)
+    total_offspring = total_offspring[order]
+    total_offspring = total_offspring[n_offspring:,:]
+
 
     return total_offspring
 
@@ -225,7 +245,7 @@ notimproved = 0
 
 for i in range(ini_g+1, gens):
 
-    offspring = crossover(pop)  # crossover
+    offspring = crossover(pop, i)  # crossover
     fit_offspring = evaluate(offspring)   # evaluation
     pop = np.vstack((pop,offspring))
     fit_pop = np.append(fit_pop,fit_offspring)
@@ -252,7 +272,7 @@ for i in range(ini_g+1, gens):
         last_sol = best_sol
         notimproved = 0
 
-    if notimproved >= 15:
+    if notimproved >= 10:
 
         file_aux  = open(experiment_name+'/results.txt','a')
         file_aux.write('\ndoomsday')
