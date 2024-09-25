@@ -40,7 +40,7 @@ dom_u = 1
 dom_l = -1
 npop = 100  # 种群大小
 gens = 30   # 总代数
-mutation = 0.2
+mutation = 0.4
 
 # 初始化种群
 def initialize_population():
