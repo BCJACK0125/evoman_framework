@@ -123,21 +123,24 @@ def evolve_island(pop, fit_pop):
 
 # 运行进化过程
 def run_evolution():
-    islands = initialize_population()
-    for generation in range(gens):
-        # 每个岛屿独立进化
-        for i in range(n_islands):
-            pop, fit_pop = islands[i]
-            islands[i] = evolve_island(pop, fit_pop)
+    with open("results_multi.txt", "a") as file:
+        islands = initialize_population()
+        for generation in range(gens):
+            # 每个岛屿独立进化
+            for i in range(n_islands):
+                pop, fit_pop = islands[i]
+                islands[i] = evolve_island(pop, fit_pop)
 
-        # 迁移操作
-        if generation % migration_interval == 0 and generation > 0:
-            migrate(islands)
+            # 迁移操作
+            if generation % migration_interval == 0 and generation > 0:
+                migrate(islands)
 
-        # 记录结果
-        for i in range(n_islands):
-            pop, fit_pop = islands[i]
-            best = np.argmax(fit_pop)
-            print(f"Island {i} - Generation {generation}: Best Fitness = {fit_pop[best]}")
+            # 记录结果
+            for i in range(n_islands):
+                pop, fit_pop = islands[i]
+                best = np.argmax(fit_pop)
+                result = f"Island {i} - Generation {generation}: Best Fitness = {fit_pop[best]}"
+                print(result)
+                file.write(result + "\n")
 
 run_evolution()

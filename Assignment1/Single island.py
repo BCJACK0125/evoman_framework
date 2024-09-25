@@ -101,12 +101,15 @@ def evolve_population(pop, fit_pop):
 
 # 运行进化过程
 def run_evolution():
-    pop, fit_pop = initialize_population()
-    for generation in range(gens):
-        pop, fit_pop = evolve_population(pop, fit_pop)
+    with open("results_single.txt", "a") as file:
+        pop, fit_pop = initialize_population()
+        for generation in range(gens):
+            pop, fit_pop = evolve_population(pop, fit_pop)
 
-        # 记录结果
-        best = np.argmax(fit_pop)
-        print(f"Generation {generation}: Best Fitness = {fit_pop[best]}")
+            # 记录结果
+            best = np.argmax(fit_pop)
+            result = f"Generation {generation}: Best Fitness = {fit_pop[best]}"
+            print(result)
+            file.write(result + "\n")
 
 run_evolution()
