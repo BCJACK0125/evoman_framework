@@ -40,7 +40,7 @@ dom_u = 1
 dom_l = -1
 npop = 100  # 种群大小
 gens = 30   # 总代数
-mutation = 0.4
+mutation = 0.2
 
 # 初始化种群
 def initialize_population():
@@ -101,12 +101,15 @@ def evolve_population(pop, fit_pop):
 
 # 运行进化过程
 def run_evolution():
-    pop, fit_pop = initialize_population()
-    for generation in range(gens):
-        pop, fit_pop = evolve_population(pop, fit_pop)
+    with open("results_single.txt", "a") as file:
+        pop, fit_pop = initialize_population()
+        for generation in range(gens):
+            pop, fit_pop = evolve_population(pop, fit_pop)
 
-        # 记录结果
-        best = np.argmax(fit_pop)
-        print(f"Generation {generation}: Best Fitness = {fit_pop[best]}")
+            # 记录结果
+            best = np.argmax(fit_pop)
+            result = f"Generation {generation}: Best Fitness = {fit_pop[best]}"
+            print(result)
+            file.write(result + "\n")
 
 run_evolution()
