@@ -39,10 +39,10 @@ env = Environment(experiment_name=experiment_name,
 n_vars = 5  # 当前控制器不使用神经网络，仅产生5个动作
 dom_u = 1
 dom_l = -1
-npop = 100  # 总种群大小
-gens = 30   # 总代数
-mutation = 0.2
-n_islands = 5  # 岛屿数量
+npop = 80  # 总种群大小
+gens = 40   # 总代数
+mutation = 0.3
+n_islands = 4  # 岛屿数量
 migration_rate = 0.1  # 每次迁移的比例
 migration_interval = 5  # 每隔多少代进行一次迁移
 
