@@ -96,16 +96,50 @@ def crossover_and_mutation(pop, mutation):
     return total_offspring
 
 # 种群迁移函数
+# 种群迁移函数
 def migrate(islands):
-    for i in range(n_islands):
-        # 从岛屿i中随机选择部分个体，迁移到下一个岛屿
-        next_island = (i + 1) % n_islands
-        num_migrants = int(island_pop_size * migration_rate)
-        migrants = islands[i][0][:num_migrants]
+    # 计算每个岛屿需要迁移的个体数
+    num_im = int(island_pop_size * migration_rate)
 
-        # 将选出的个体替换到下一个岛屿
-        islands[next_island][0][-num_migrants:] = migrants
-        islands[next_island][1][-num_migrants:] = evaluate(migrants)
+    # 创建一个新列表来记录所有需要迁移的个体
+    migrants_list = []
+
+    # 第一步：从每个岛屿选出最优的 num_im 个体，按适应度排序，并删除这些个体
+    for i in range(n_islands):
+        pop, fit_pop = islands[i]
+
+        # 根据适应度排序，选择最优的 num_im 个体
+        best_indices = np.argsort(fit_pop)[-num_im:]  # 获取最优的 num_im 个体的索引
+        best_individuals = pop[best_indices]
+        best_fitnesses = fit_pop[best_indices]
+
+        # 将这些个体记录到迁移列表中
+        migrants_list.append((best_individuals, best_fitnesses))
+
+        # 删除岛屿中这些最优个体
+        pop = np.delete(pop, best_indices, axis=0)
+        fit_pop = np.delete(fit_pop, best_indices)
+
+        # 更新岛屿，删除后的个体成为新的种群
+        islands[i] = (pop, fit_pop)
+
+    # 第二步：将从每个岛屿选出的个体迁移到下一个岛屿
+    for i in range(n_islands):
+        next_island = (i + 1) % n_islands  # 下一个岛屿的索引
+
+        # 获取从当前岛屿迁出的个体
+        migrants, migrants_fit = migrants_list[i]
+
+        # 将迁移的个体加入下一个岛屿
+        pop, fit_pop = islands[next_island]
+
+        # 将迁移个体和原有种群结合
+        pop = np.vstack((pop, migrants))
+        fit_pop = np.append(fit_pop, migrants_fit)
+
+        # 更新下一个岛屿的种群
+        islands[next_island] = (pop, fit_pop)
+
         
         
 
