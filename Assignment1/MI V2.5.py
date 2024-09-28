@@ -71,6 +71,7 @@ env = Environment(experiment_name=experiment_name,
                   player_controller=player_controller_instance,
                   enemymode="static",
                   level=2,
+                  randomini='yes',
                   speed="fastest",
                   visuals=False)
 

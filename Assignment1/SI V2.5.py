@@ -72,6 +72,7 @@ env = Environment(experiment_name=experiment_name,
                   enemymode="static",
                   level=2,
                   speed="fastest",
+                  randomini='yes',
                   visuals=False)
 
 # 遗传算法参数
