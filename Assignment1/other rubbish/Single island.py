@@ -39,8 +39,8 @@ n_vars = 5  # 当前控制器不使用神经网络，仅产生5个动作
 dom_u = 1
 dom_l = -1
 npop = 100  # 种群大小
-gens = 30   # 总代数
-mutation = 0.2
+gens = 500   # 总代数
+mutation = 0.3
 
 # 初始化种群
 def initialize_population():
