@@ -71,7 +71,7 @@ class player_controller(Controller):
 player_controller_instance = player_controller(10)  # 10个隐藏神经元的示例
 
 # 初始化环境
-enemy = [3]  # 敌人编号
+enemy = [8]  # 敌人编号
 env = Environment(
     experiment_name=experiment_name,
     enemies=enemy,
@@ -79,7 +79,6 @@ env = Environment(
     player_controller=player_controller_instance,
     enemymode="static",
     level=2,
-    randomini="yes",
     speed="fastest",
     visuals=False,
 )
@@ -91,7 +90,7 @@ dom_u = 1
 dom_l = -1
 npop = 100  # 种群大小
 gens = 50  # 总代数
-mutation = 0.6  # 突变率
+mutation = 0.6
 elitism_rate = 0.1  # 精英率
 
 
@@ -107,12 +106,6 @@ def simulation(env, x):
     env.player_controller.set(x, n_inputs)  # 设置控制器参数
     f, _, _, _ = env.play(pcont=x)
     return f
-
-
-def simulation_test(env, x):
-    env.player_controller.set(x, n_inputs)  # 设置控制器参数
-    f, player_life, enemy_life, _ = env.play(pcont=x)  # 返回玩家和敌人的生命值
-    return f, player_life, enemy_life
 
 
 # 评估种群
@@ -258,16 +251,17 @@ def run_evolution(enemies):
             pop, fit_pop, experiment_name, enemy, npop, gens, mutation, elitism_rate
         )
 
+
+# 运行进化过程
 def run_multiple_evolutions(enemies, num_runs=10):
     for i in range(num_runs):
         print(f"Running evolution {i+1}/{num_runs}")
         run_evolution(enemies)
 
-# 调用新函数
-# run_multiple_evolutions(enemies=enemy, num_runs=10)
-# 运行进化过程
-# run_evolution(enemy)
 
+# 调用新函数
+run_multiple_evolutions(enemy, num_runs=10)
+# run_evolution(enemy)
 
 
 ##################################################################################
@@ -283,78 +277,20 @@ def test_loaded_model():
     filepath = f"{experiment_name}/MI_fitness93.152828_npop100_gens10_enemy8_mut0.30_elitism0.10_20240928_030755.txt"
 
     fitness_scores = []
-    gains = []  # 用于存储每次运行的 individual_gain
 
     # 加载保存的模型
     solution = load_best_solution(filepath)
 
     # 运行 5 次
     for i in range(5):
-        fitness, player_life, enemy_life = simulation_test(env, solution)
+        fitness = simulation(env, solution)
         fitness_scores.append(fitness)
-
-        # 计算 individual_gain
-        individual_gain = player_life - enemy_life
-        gains.append(individual_gain)
-
-        print(f"Run {i+1} fitness: {fitness}, individual_gain: {individual_gain}")
+        print(f"Run {i+1} fitness: {fitness}")
 
     # 计算适应度的平均值
     average_fitness = np.mean(fitness_scores)
-    average_gain = np.mean(gains)
-
     print(f"\nAverage fitness over 5 runs: {average_fitness}")
-    print(f"Average individual gain over 5 runs: {average_gain}")
 
 
 # 运行测试
 # test_loaded_model()
-import glob
-def evaluate_models(experiment_name, enemy):
-    # 获取所有模型文件
-    model_files = glob.glob(f"{experiment_name}/*.txt")
-    
-    # 筛选出相同敌人的模型文件
-    enemy_model_files = [file for file in model_files if f"enemy{enemy}" in file]
-    
-    best_gain = -np.inf
-    best_model = None
-    best_model_gains = []
-
-    for filepath in enemy_model_files:
-        fitness_scores = []
-        gains = []  # 用于存储每次运行的 individual_gain
-
-        # 加载保存的模型
-        solution = load_best_solution(filepath)
-
-        # 运行 5 次
-        for i in range(5):
-            fitness, player_life, enemy_life = simulation_test(env, solution)
-            fitness_scores.append(fitness)
-
-            # 计算 individual_gain
-            individual_gain = player_life - enemy_life
-            gains.append(individual_gain)
-
-            print(f"Model: {filepath}, Run {i+1} fitness: {fitness}, individual_gain: {individual_gain}")
-
-        # 计算适应度的平均值
-        average_fitness = np.mean(fitness_scores)
-        average_gain = np.mean(gains)
-
-        print(f"\nModel: {filepath}, Average fitness over 5 runs: {average_fitness}")
-        print(f"Model: {filepath}, Average individual gain over 5 runs: {average_gain}\n")
-
-        # 找出最佳结果对应的模型
-        if average_gain > best_gain:
-            best_gain = average_gain
-            best_model = filepath
-            best_model_gains = gains
-
-    print(f"Best model: {best_model} with average individual gain: {best_gain}")
-    print(f"Best model's 5 individual gains: {best_model_gains}")
-
-
-# 调用新函数
-evaluate_models(experiment_name, enemy=enemy[0])
