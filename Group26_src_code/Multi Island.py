@@ -72,7 +72,7 @@ class player_controller(Controller):
 player_controller_instance = player_controller(10)  # Example with 10 hidden neurons
 
 # Initialize environment
-enemy = [3]  # Enemy number
+enemy = [8]  # Enemy number
 env = Environment(
     experiment_name=experiment_name,
     enemies=enemy,
@@ -366,4 +366,4 @@ def evaluate_models(experiment_name, enemy):
 
 
 # Call the new function
-evaluate_models(experiment_name, enemy=enemy[0])
+# evaluate_models(experiment_name, enemy=enemy[0])
