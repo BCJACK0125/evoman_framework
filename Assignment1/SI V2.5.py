@@ -2,18 +2,20 @@ import sys
 import os
 import numpy as np
 from datetime import datetime
+import glob
 
-# 获取当前 .py 文件的路径
+
+# Get the path of the current .py file
 current_path = os.path.dirname(os.path.abspath(__file__))
 
-# 将 evoman_framework 文件夹添加到 sys.path
+# Add the evoman_framework folder to sys.path
 sys.path.append(os.path.join(current_path, ".."))
 
-# 现在可以导入 evoman 环境中的内容
+# Now you can import contents from the evoman environment
 from evoman.environment import Environment
 from evoman.controller import Controller
 
-# 设置无头模式，提升运行速度
+# Set headless mode to improve running speed
 headless = True
 if headless:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -23,19 +25,19 @@ if not os.path.exists(experiment_name):
     os.makedirs(experiment_name)
 
 
-# 定义 Sigmoid 激活函数
+# Define Sigmoid activation function
 def sigmoid_activation(x):
     return 1.0 / (1.0 + np.exp(-x))
 
 
-# 自定义控制器，包含一个简单的神经网络结构
+# Custom controller with a simple neural network structure
 class player_controller(Controller):
     def __init__(self, _n_hidden):
-        self.n_hidden = [_n_hidden]  # 隐藏层神经元数量
+        self.n_hidden = [_n_hidden]  # Number of neurons in the hidden layer
 
     def set(self, controller, n_inputs):
         if self.n_hidden[0] > 0:
-            # 从控制器参数中提取权重和偏置，构建神经网络
+            # Extract weights and biases from controller parameters to build the neural network
             self.bias1 = controller[: self.n_hidden[0]].reshape(1, self.n_hidden[0])
             weights1_slice = n_inputs * self.n_hidden[0] + self.n_hidden[0]
             self.weights1 = controller[self.n_hidden[0] : weights1_slice].reshape(
@@ -47,7 +49,7 @@ class player_controller(Controller):
             )
 
     def control(self, inputs, controller):
-        # 归一化输入
+        # Normalize inputs
         inputs = (inputs - min(inputs)) / float((max(inputs) - min(inputs)))
         if self.n_hidden[0] > 0:
             output1 = sigmoid_activation(inputs.dot(self.weights1) + self.bias1)
@@ -57,7 +59,7 @@ class player_controller(Controller):
             weights = controller[5:].reshape((len(inputs), 5))
             output = sigmoid_activation(inputs.dot(weights) + bias)[0]
 
-        # 根据输出决定玩家动作
+        # Determine player actions based on output
         left = 1 if output[0] > 0.5 else 0
         right = 1 if output[1] > 0.5 else 0
         jump = 1 if output[2] > 0.5 else 0
@@ -67,11 +69,11 @@ class player_controller(Controller):
         return [left, right, jump, shoot, release]
 
 
-# 初始化控制器
-player_controller_instance = player_controller(10)  # 10个隐藏神经元的示例
+# Initialize controller
+player_controller_instance = player_controller(10)  # Example with 10 hidden neurons
 
-# 初始化环境
-enemy = [3]  # 敌人编号
+# Initialize environment
+enemy = [3]  # Enemy number
 env = Environment(
     experiment_name=experiment_name,
     enemies=enemy,
@@ -84,34 +86,36 @@ env = Environment(
     visuals=False,
 )
 
-# 遗传算法参数
-n_inputs = env.get_num_sensors()  # 控制器输入数
-n_vars = n_inputs * 10 + 10 + 10 * 5 + 5  # 控制器权重和偏置总数
+# Genetic algorithm parameters
+n_inputs = env.get_num_sensors()  # Number of inputs to the controller
+n_vars = (
+    n_inputs * 10 + 10 + 10 * 5 + 5
+)  # Total number of weights and biases in the controller
 dom_u = 1
 dom_l = -1
-npop = 100  # 种群大小
-gens = 50  # 总代数
-mutation = 0.6  # 突变率
-elitism_rate = 0.1  # 精英率
+npop = 100  # Population size
+gens = 50  # Total generations
+mutation = 0.6  # Mutation rate
+elitism_rate = 0.1  # Elitism rate
 
 
-# 初始化种群
+# Initialize population
 def initialize_population():
     pop = np.random.uniform(dom_l, dom_u, (npop, n_vars))
     fit_pop = evaluate(pop)
     return pop, fit_pop
 
 
-# 运行模拟，返回适应度
+# Run simulation and return fitness
 def simulation(env, x):
-    env.player_controller.set(x, n_inputs)  # 设置控制器参数
+    env.player_controller.set(x, n_inputs)  # Set controller parameters
     f, _, _, _ = env.play(pcont=x)
     return f
 
 
 def simulation_test(env, x):
-    env.player_controller.set(x, n_inputs)  # 设置控制器参数
-    f, player_life, enemy_life, _ = env.play(pcont=x)  # 返回玩家和敌人的生命值
+    env.player_controller.set(x, n_inputs)  # Set controller parameters
+    f, player_life, enemy_life, _ = env.play(pcont=x)  # Return player and enemy life
     return f, player_life, enemy_life
 
 
@@ -119,12 +123,12 @@ def load_best_solution(filepath):
     return np.loadtxt(filepath)
 
 
-# 评估种群
+# Evaluate population
 def evaluate(x):
     return np.array([simulation(env, ind) for ind in x])
 
 
-# 轮盘赌选择
+# Roulette wheel selection
 def roulette_wheel_selection(pop, fit_pop):
     total_fitness = np.sum(fit_pop)
     pick = np.random.uniform(0, total_fitness)
@@ -135,7 +139,7 @@ def roulette_wheel_selection(pop, fit_pop):
             return pop[i]
 
 
-# 均匀交叉
+# Uniform crossover
 def uniform_crossover(p1, p2):
     offspring = np.zeros_like(p1)
     for i in range(len(p1)):
@@ -146,7 +150,7 @@ def uniform_crossover(p1, p2):
     return offspring
 
 
-# 固定突变
+# Fixed mutation
 def mutation_operation(offspring):
     for i in range(len(offspring)):
         if np.random.uniform(0, 1) <= mutation:
@@ -154,7 +158,7 @@ def mutation_operation(offspring):
     return offspring
 
 
-# 精英选择
+# Elitism selection
 def elitism(pop, fit_pop, elite_size):
     elite_indices = np.argsort(fit_pop)[-elite_size:]
     elite_pop = pop[elite_indices]
@@ -162,27 +166,27 @@ def elitism(pop, fit_pop, elite_size):
     return elite_pop, elite_fitness
 
 
-# 交叉和突变操作
+# Crossover and mutation operations
 def crossover_and_mutation(pop):
     total_offspring = np.zeros((0, n_vars))
     for p in range(0, pop.shape[0], 2):
         p1 = pop[np.random.randint(0, pop.shape[0])]
         p2 = pop[np.random.randint(0, pop.shape[0])]
 
-        # 均匀交叉
+        # Uniform crossover
         offspring = uniform_crossover(p1, p2)
 
-        # 固定突变操作
+        # Fixed mutation operation
         offspring = mutation_operation(offspring)
 
-        # 适应度限制
+        # Fitness constraint
         offspring = np.clip(offspring, dom_l, dom_u)
         total_offspring = np.vstack((total_offspring, offspring))
 
     return total_offspring
 
 
-# 保存最佳解决方案
+# Save final solution
 def save_final_solution(
     pop, fit_pop, experiment_name, enemies, npop, gens, mutation, elitism_rate
 ):
@@ -190,46 +194,46 @@ def save_final_solution(
     best_solution = pop[best_index]
     best_fitness = fit_pop[best_index]
 
-    # 获取当前时间戳
+    # Get current timestamp
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # 文件名使用最佳适应度、种群大小、代数、敌人类型、突变率、精英率等命名
+    # Filename uses the best fitness, population size, generations, enemy type, mutation rate, and elitism rate
     filename = (
         f"{experiment_name}/SI_fitness{best_fitness:.6f}_npop{npop}_gens{gens}_"
         f"enemy{enemies[0]}_mut{mutation:.2f}_elitism{elitism_rate:.2f}_{current_time}.txt"
     )
 
-    # 保存最佳个体的控制器权重和偏置
+    # Save the best individual's controller weights and biases
     np.savetxt(filename, best_solution)
 
-    # 打印保存文件的信息
+    # Print information about the saved file
     print(f"Best solution saved as {filename} with fitness: {best_fitness:.6f}")
 
 
-# 遗传算法进化过程
+# Genetic algorithm evolution process
 def evolve_population(pop, fit_pop):
-    # 精英选择
+    # Elitism selection
     elite_size = int(elitism_rate * npop)
     elite_pop, elite_fitness = elitism(pop, fit_pop, elite_size)
 
-    # 交叉和突变
+    # Crossover and mutation
     offspring = crossover_and_mutation(pop)
     fit_offspring = evaluate(offspring)
 
-    # 合并精英和后代
+    # Combine elites and offspring
     pop = np.vstack((elite_pop, offspring[: npop - elite_size]))
     fit_pop = np.hstack((elite_fitness, fit_offspring[: npop - elite_size]))
 
     return pop, fit_pop
 
 
-# 运行进化过程
+# Run evolution process
 def run_evolution(enemy):
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"single_results_{current_time}.txt"
 
     with open(filename, "a") as file:
-        # 写入标题行
+        # Write header row
         file.write(
             f"npop{npop}_gens{gens}_"
             f"enemy{enemy[0]}_mut{mutation:.2f}_elitism{elitism_rate:.2f}_{current_time}\n"
@@ -241,18 +245,18 @@ def run_evolution(enemy):
         for generation in range(gens):
             pop, fit_pop = evolve_population(pop, fit_pop)
 
-            # 记录结果
-            best = np.max(fit_pop)  # 最佳值
-            mean = np.mean(fit_pop)  # 平均值
-            std = np.std(fit_pop)  # 标准差
+            # Record results
+            best = np.max(fit_pop)  # Best value
+            mean = np.mean(fit_pop)  # Mean value
+            std = np.std(fit_pop)  # Standard deviation
 
             result = f"{generation} {best:.6f} {mean:.6f} {std:.6f}"
             print(result)
 
-            # 写入文件
+            # Write to file
             file.write(result + "\n")
 
-        # 保存最终的最佳解决方案
+        # Save the final best solution
         save_final_solution(
             pop, fit_pop, experiment_name, enemy, npop, gens, mutation, elitism_rate
         )
@@ -264,38 +268,38 @@ def run_multiple_evolutions(enemies, num_runs=10):
         run_evolution(enemies)
 
 
-# 调用新函数
-# run_multiple_evolutions(enemies=enemy, num_runs=10)
+# Call the new function
+run_multiple_evolutions(enemies=enemy, num_runs=10)
 # run_evolution()
 
 
 ##################################################################################
-# 如果要加载并测试保存的模型，请注释run_evolution(),并取消注释以下代码,修改文件名
+# If you want to load and test the saved model, comment out run_evolution(), and uncomment the following code, modify the filename
 ##################################################################################
 
 
 def test_loaded_model():
-    # 硬编码的模型文件路径
+    # Hardcoded model file path
     filepath = f"{experiment_name}/SI_fitness90.206611_npop100_gens5_enemy8_mut0.30_elitism0.10_20240928_032146.txt"
 
     fitness_scores = []
-    gains = []  # 用于存储每次运行的 individual_gain
+    gains = []  # Used to store individual_gain for each run
 
-    # 加载保存的模型
+    # Load the saved model
     solution = load_best_solution(filepath)
 
-    # 运行 5 次
+    # Run 5 times
     for i in range(5):
         fitness, player_life, enemy_life = simulation_test(env, solution)
         fitness_scores.append(fitness)
 
-        # 计算 individual_gain
+        # Calculate individual_gain
         individual_gain = player_life - enemy_life
         gains.append(individual_gain)
 
         print(f"Run {i+1} fitness: {fitness}, individual_gain: {individual_gain}")
 
-    # 计算适应度的平均值
+    # Calculate the average fitness
     average_fitness = np.mean(fitness_scores)
     average_gain = np.mean(gains)
 
@@ -303,16 +307,15 @@ def test_loaded_model():
     print(f"Average individual gain over 5 runs: {average_gain}")
 
 
-# # 运行测试
+# # Run test
 # test_loaded_model()
-import glob
 
 
 def evaluate_models(experiment_name, enemy):
-    # 获取所有模型文件
+    # Get all model files
     model_files = glob.glob(f"{experiment_name}/*.txt")
 
-    # 筛选出相同敌人的模型文件
+    # Filter model files for the same enemy
     enemy_model_files = [file for file in model_files if f"enemy{enemy}" in file]
 
     best_gain = -np.inf
@@ -321,17 +324,17 @@ def evaluate_models(experiment_name, enemy):
 
     for filepath in enemy_model_files:
         fitness_scores = []
-        gains = []  # 用于存储每次运行的 individual_gain
+        gains = []  # Used to store individual_gain for each run
 
-        # 加载保存的模型
+        # Load the saved model
         solution = load_best_solution(filepath)
 
-        # 运行 5 次
+        # Run 5 times
         for i in range(5):
             fitness, player_life, enemy_life = simulation_test(env, solution)
             fitness_scores.append(fitness)
 
-            # 计算 individual_gain
+            # Calculate individual_gain
             individual_gain = player_life - enemy_life
             gains.append(individual_gain)
 
@@ -339,7 +342,7 @@ def evaluate_models(experiment_name, enemy):
                 f"Model: {filepath}, Run {i+1} fitness: {fitness}, individual_gain: {individual_gain}"
             )
 
-        # 计算适应度的平均值
+        # Calculate the average fitness
         average_fitness = np.mean(fitness_scores)
         average_gain = np.mean(gains)
 
@@ -348,7 +351,7 @@ def evaluate_models(experiment_name, enemy):
             f"Model: {filepath}, Average individual gain over 5 runs: {average_gain}\n"
         )
 
-        # 找出最佳结果对应的模型
+        # Find the model with the best result
         if average_gain > best_gain:
             best_gain = average_gain
             best_model = filepath
@@ -358,5 +361,5 @@ def evaluate_models(experiment_name, enemy):
     print(f"Best model's 5 individual gains: {best_model_gains}")
 
 
-# 调用新函数
+# Call the new function
 evaluate_models(experiment_name, enemy=enemy[0])
