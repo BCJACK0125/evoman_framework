@@ -1,0 +1,2 @@
+npop100_gens50_enemy1_sigma0.30_20241018_094142
+gen best mean std

@@ -1,0 +1,2 @@
+npop100_gens50_enemies[1, 2, 3, 4, 5, 6, 7, 8]_w0.50_c11.50_c21.50_20241018_103123
+gen best mean std

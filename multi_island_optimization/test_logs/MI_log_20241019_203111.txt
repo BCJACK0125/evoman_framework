@@ -1,0 +1,2 @@
+npop100_gens50_enemy[1]_mut0.20_elitism0.20_20241019_203111
+gen best mean std

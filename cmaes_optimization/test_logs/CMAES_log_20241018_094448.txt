@@ -1,0 +1,16 @@
+npop100_gens50_enemy1_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy2_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy3_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy4_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy5_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy6_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy7_sigma0.30_20241018_094448
+gen best mean std
+npop100_gens50_enemy8_sigma0.30_20241018_094448
+gen best mean std
